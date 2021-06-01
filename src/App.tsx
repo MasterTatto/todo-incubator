@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { v1 } from 'uuid';
+import AddItemForm from './AddItemForm';
 import './App.css';
-import { Todolist } from './Todolist';
+import { Todolist, TaskType } from './Todolist';
 export type filterValue = 'all' | 'active' | 'completed';
 export type TodoListType = {
 	id: string;
@@ -9,75 +10,14 @@ export type TodoListType = {
 	filter: filterValue;
 };
 function App() {
-	//const [filter, setFilter] = useState<filterValue>('all');
-	//
-	//
-
-	//
-	function changeChecked(id: string, bool: boolean, todoListsId: string) {
-		let tasks = tasksObj[todoListsId];
-		//
-		const newTask = tasks.map((t) =>
-			t.id === id ? { ...t, isDone: bool } : t
-		);
-		tasksObj[todoListsId] = newTask;
-		setTask({ ...tasksObj });
-	}
-	//
-	function addTask(v: string, todoListsId: string) {
-		//
-		const task = { id: v1(), title: v, isDone: false };
-		let tasks = tasksObj[todoListsId];
-		const newTasks = [task, ...tasks];
-		tasksObj[todoListsId] = newTasks;
-		setTask({ ...tasksObj });
-	}
-	//
-
-	function removeTask(idTask: string, todoListsId: string) {
-		let tasks = tasksObj[todoListsId];
-		//
-		const newTask = tasks.filter((f) => {
-			if (f.id !== idTask) {
-				return true;
-			} else {
-				return false;
-			}
-		});
-		tasksObj[todoListsId] = newTask;
-		setTask({ ...tasksObj });
-	}
-	//
-	function addFilterBtn(f: filterValue, todoId: string) {
-		let todo = todoLists.find((tl) => tl.id === todoId);
-		if (todo) {
-			todo.filter = f;
-			setTodoList([...todoLists]);
-		}
-	}
-	//
 	let todoList_1 = v1();
 	let todoList_2 = v1();
 	//
-	let [todoLists, setTodoList] = useState<Array<TodoListType>>([
-		{ id: todoList_1, title: 'What to learn', filter: 'all' },
-		{ id: todoList_2, title: 'What to buy', filter: 'all' },
-	]);
+	type TaskStateType = {
+		[key: string]: Array<TaskType>;
+	};
 	//
-	function removeTodoList(todoID: string) {
-		let removeTodo = todoLists.filter((f) => {
-			if (f.id !== todoID) {
-				return true;
-			} else {
-				return false;
-			}
-		});
-		setTodoList(removeTodo)
-		delete tasksObj[todoID]
-		setTask({...tasksObj})
-	}
-	//
-	let [tasksObj, setTask] = useState({
+	let [tasks, setTask] = useState<TaskStateType>({
 		[todoList_1]: [
 			{ id: v1(), title: 'HTML&CSS', isDone: true },
 			{ id: v1(), title: 'JS', isDone: true },
@@ -93,17 +33,102 @@ function App() {
 			{ id: v1(), title: 'salt', isDone: false },
 		],
 	});
+	//
+	let [todoLists, setTodoList] = useState<Array<TodoListType>>([
+		{ id: todoList_1, title: 'What to learn', filter: 'all' },
+		{ id: todoList_2, title: 'What to buy', filter: 'all' },
+	]);
+	//
+	//
+	function changeChecked(id: string, bool: boolean, todoListsId: string) {
+		tasks[todoListsId] = tasks[todoListsId].map((t) =>
+			t.id === id ? { ...t, isDone: bool } : t
+		);
+		setTask({ ...tasks });
+	}
+	//
+	function changeTaskTitle(id: string, title: string, todoListsId: string) {
+		tasks[todoListsId] = tasks[todoListsId].map((t) =>
+			t.id === id ? { ...t, title: title } : t
+		);
+		setTask({ ...tasks });
+	}
+	//
+	function addTask(v: string, todoListsId: string) {
+		const task = { id: v1(), title: v, isDone: false };
+		tasks[todoListsId] = [task, ...tasks[todoListsId]];
+		setTask({ ...tasks });
+	}
+	//
+	function removeTask(idTask: string, todoListsId: string) {
+		tasks[todoListsId] = tasks[todoListsId].filter((f) => {
+			if (f.id !== idTask) {
+				return true;
+			} else {
+				return false;
+			}
+		});
+		setTask({ ...tasks });
+	}
+	//
+	function addFilterBtn(f: filterValue, todoId: string) {
+		let todo = todoLists.map((tl) => {
+			if (tl.id === todoId) {
+				return { ...tl, filter: f };
+			} else {
+				return tl;
+			}
+		});
+		setTodoList(todo);
+	}
+	function changeTodoListTitle(title: string, todoId: string) {
+		let todo = todoLists.map((tl) => {
+			if (tl.id === todoId) {
+				return { ...tl, title };
+			} else {
+				return tl;
+			}
+		});
+		setTodoList(todo);
+	}
+	//
+	function removeTodoList(todoID: string) {
+		let removeTodo = todoLists.filter((f) => {
+			if (f.id !== todoID) {
+				return true;
+			} else {
+				return false;
+			}
+		});
+		setTodoList(removeTodo);
+		delete tasks[todoID];
+		setTask({ ...tasks });
+	}
+	//
+	function addTodoList(title: string) {
+		const newTodoListID = v1();
+		const newTodoList: TodoListType = {
+			id: newTodoListID,
+			title: title,
+			filter: 'all',
+		};
+		setTodoList([newTodoList, ...todoLists]);
+		setTask({ ...tasks, [newTodoListID]: [] });
+	}
+	//
 	return (
 		<div className='App'>
+			<AddItemForm addItem={addTodoList} />
+
 			{todoLists.map((tl) => {
 				function windowTask() {
 					if (tl.filter === 'active') {
-						return tasksObj[tl.id].filter((f) => f.isDone === false);
+						return tasks[tl.id].filter((f) => f.isDone === false);
 					}
 					if (tl.filter === 'completed') {
-						return tasksObj[tl.id].filter((f) => f.isDone === true);
+						return tasks[tl.id].filter((f) => f.isDone === true);
 					} else {
-						return tasksObj[tl.id];
+						return tasks[tl.id];
 					}
 				}
 				//
@@ -119,6 +144,8 @@ function App() {
 						changeChecked={changeChecked}
 						filter={tl.filter}
 						removeTodoList={removeTodoList}
+						changeTaskTitle={changeTaskTitle}
+						changeTodoListTitle={changeTodoListTitle}
 					/>
 				);
 			})}

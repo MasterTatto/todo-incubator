@@ -1,12 +1,14 @@
-import React, { ChangeEvent, KeyboardEvent, useState } from 'react';
+import React from 'react';
+import AddItemForm from './AddItemForm';
 import { filterValue } from './App';
-
-type TaskType = {
+import EditSpan from './EditSpan';
+//
+export type TaskType = {
 	id: string;
 	title: string;
 	isDone: boolean;
 };
-
+//
 type PropsType = {
 	title: string;
 	tasks: Array<TaskType>;
@@ -14,17 +16,23 @@ type PropsType = {
 	addFilterBtn: (v: filterValue, id: string) => void;
 	addTask: (v: string, todoid: string) => void;
 	changeChecked: (id: string, bool: boolean, todoid: string) => void;
+	changeTaskTitle: (id: string, title: string, todoid: string) => void;
 	filter: filterValue;
 	id: string;
-	removeTodoList:(id:string) => void
+	removeTodoList: (id: string) => void;
+	changeTodoListTitle: (title: string, todoId: string) => void;
 };
-
+//
 export function Todolist(props: PropsType) {
 	const liItem = props.tasks.map((t) => {
 		const removeTask = () => props.removeTask(t.id, props.id);
 		//
+		function changeTitle(title: string) {
+			props.changeTaskTitle(t.id, title, props.id);
+		}
+		//
 		return (
-			<li className={t.isDone ? 'done' : ''}>
+			<li className={t.isDone ? 'done' : ''} key={t.id}>
 				<input
 					type='checkbox'
 					checked={t.isDone}
@@ -32,55 +40,31 @@ export function Todolist(props: PropsType) {
 						props.changeChecked(t.id, e.currentTarget.checked, props.id)
 					}
 				/>
-				<span>{t.title}</span>
+				<EditSpan title={t.title} changeTitle={changeTitle} />
+				{/* <span >{t.title}</span> */}
 				<button onClick={removeTask}>X</button>
 			</li>
 		);
 	});
 	//
-	const [value, setValue] = useState('');
+	function addtask(value: string) {
+		props.addTask(value, props.id);
+	}
 	//
-	const [error, setError] = useState(false);
+function changeTodoListTitle(title:string) {
+props.changeTodoListTitle(title,props.id)
+}
 	//
-	const noSpace = value.trim();
-	//
-	const addInputValue = (e: ChangeEvent<HTMLInputElement>) => {
-		setValue(e.currentTarget.value);
-		setError(false);
-	};
-	//
-	const addValueBtn = () => {
-		if (noSpace) {
-			props.addTask(noSpace, props.id);
-			setValue('');
-		} else {
-			setError(true);
-		}
-	};
-	//
-	const addValueEnter = (e: KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === 'Enter' && noSpace) {
-			props.addTask(noSpace, props.id);
-			setValue('');
-		} else {
-			setError(true);
-		}
-	};
 	return (
 		<div>
 			<h3>
-				{props.title}
+				<EditSpan
+					title={props.title}
+					changeTitle={changeTodoListTitle}
+				/>
 				<button onClick={() => props.removeTodoList(props.id)}>X</button>
 			</h3>
-			<div>
-				<input
-					className={error ? 'error' : ''}
-					value={value}
-					onChange={addInputValue}
-					onKeyPress={addValueEnter}
-				/>
-				<button onClick={addValueBtn}>+</button>
-			</div>
+			<AddItemForm addItem={addtask} />
 			<ul>{liItem}</ul>
 			<div>
 				<button
